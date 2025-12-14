@@ -26,8 +26,7 @@ def _build_cors_origins() -> List[str]:
     if configured:
         origins = [origin.strip() for origin in configured.split(",") if origin.strip()]
     else:
-        # default safe localhost origins (avoid "*" when allow_credentials=True)
-        origins = ["http://localhost:3000", "http://127.0.0.1:3000", "http://frontend:3000"]
+        origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
     return origins
 
 
@@ -44,6 +43,11 @@ app.add_middleware(
 @app.get("/healthz")
 async def health() -> JSONResponse:
     return JSONResponse({"status": "ok"})
+
+
+@app.get("/api/health")
+async def api_health() -> JSONResponse:
+    return JSONResponse({"ok": True})
 
 
 @app.post("/api/extract", response_model=ExtractResponse)

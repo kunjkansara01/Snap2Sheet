@@ -1,4 +1,4 @@
-# Snap2Sheet
+# **Snap2Sheet**
 
 Upload an invoice image or PDF → download an accountant-ready Excel (.xlsx). Exports **Summary + LineItems** sheets.
 
@@ -12,13 +12,14 @@ Upload an invoice image or PDF → download an accountant-ready Excel (.xlsx). E
 ```bash
 git clone https://github.com/kunjkansara01/Snap2Sheet.git
 cd Snap2Sheet
+docker compose down --remove-orphans
 docker compose up --build
 ```
-Then open [http://localhost:3000](http://localhost:3000), click “Try sample invoice” → download .xlsx.
+Then open http://localhost:3000, click “Try sample invoice” → download .xlsx.
 
 ## Services / Ports
-- Frontend: [http://localhost:3000](http://localhost:3000)
-- Backend: [http://localhost:8000](http://localhost:8000) (FastAPI docs at `/docs`)
+- Frontend: http://localhost:3000
+- Backend: http://localhost:8000 (FastAPI docs at `/docs`)
 
 ## Environment Variables
 - See `.env.example` in `frontend/` and `backend/`
