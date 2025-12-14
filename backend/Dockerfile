@@ -6,7 +6,13 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    libtesseract-dev \
   && rm -rf /var/lib/apt/lists/*
+
+# Sanity check tesseract
+RUN tesseract --version
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

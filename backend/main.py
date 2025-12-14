@@ -38,6 +38,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+logger.info("Allowed CORS origins: %s", _build_cors_origins())
 
 
 @app.get("/healthz")
@@ -52,42 +53,48 @@ async def api_health() -> JSONResponse:
 
 @app.post("/api/extract", response_model=ExtractResponse)
 async def extract(file: UploadFile = File(...)) -> ExtractResponse:
-    content = await file.read()
-    filename = file.filename or ""
-    is_pdf = file.content_type == "application/pdf" or filename.lower().endswith(".pdf")
-    if not is_pdf and file.content_type not in ("image/jpeg", "image/png", "image/jpg"):
-        raise HTTPException(status_code=400, detail="Only JPG, PNG, or PDF are supported.")
-    if len(content) > 10 * 1024 * 1024:
-        raise HTTPException(status_code=400, detail="File too large. Max 10MB.")
+    try:
+        content = await file.read()
+        filename = file.filename or ""
+        is_pdf = file.content_type == "application/pdf" or filename.lower().endswith(".pdf")
+        if not is_pdf and file.content_type not in ("image/jpeg", "image/png", "image/jpg"):
+            raise HTTPException(status_code=400, detail="Only JPG, PNG, or PDF are supported.")
+        if len(content) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File too large. Max 10MB.")
 
-    debug_mode = os.getenv("DEBUG_OCR", "").lower() == "true"
+        debug_mode = os.getenv("DEBUG_OCR", "").lower() == "true"
 
-    if is_pdf:
-        pages = pdf_to_images(content, max_pages=3)
-        if not pages:
-            raise HTTPException(status_code=400, detail="Could not render PDF.")
-        page_results = []
-        for idx, page_bytes in enumerate(pages):
-            processed = preprocess_image(page_bytes)
-            boxes, raw_text, provider = ocr_extract(page_bytes, processed_image=processed)
-            sc = score_page(boxes, raw_text)
-            logger.info("PDF page %s provider=%s boxes=%s score=%s", idx, provider, len(boxes), sc)
-            page_results.append((sc, boxes, raw_text))
-        page_results.sort(key=lambda t: t[0], reverse=True)
-        best_score, best_boxes, best_text = page_results[0]
-        structured = parse_invoice(best_boxes, best_text)
-        raw_text = best_text
-    else:
-        processed = preprocess_image(content)
-        boxes, raw_text, provider = ocr_extract(content, processed_image=processed)
-        logger.info("Image provider=%s boxes=%s", provider, len(boxes))
-        structured = parse_invoice(boxes, raw_text)
+        if is_pdf:
+            pages = pdf_to_images(content, max_pages=3)
+            if not pages:
+                raise HTTPException(status_code=400, detail="Could not render PDF.")
+            page_results = []
+            for idx, page_bytes in enumerate(pages):
+                processed = preprocess_image(page_bytes)
+                boxes, raw_text, provider = ocr_extract(page_bytes, processed_image=processed)
+                sc = score_page(boxes, raw_text)
+                logger.info("PDF page %s provider=%s boxes=%s score=%s", idx, provider, len(boxes), sc)
+                page_results.append((sc, boxes, raw_text))
+            page_results.sort(key=lambda t: t[0], reverse=True)
+            best_score, best_boxes, best_text = page_results[0]
+            structured = parse_invoice(best_boxes, best_text)
+            raw_text = best_text
+        else:
+            processed = preprocess_image(content)
+            boxes, raw_text, provider = ocr_extract(content, processed_image=processed)
+            logger.info("Image provider=%s boxes=%s", provider, len(boxes))
+            structured = parse_invoice(boxes, raw_text)
 
-    if debug_mode:
-        structured_dict = structured.model_dump()
-        structured_dict["debug_raw_text"] = raw_text
-        return structured.__class__(**structured_dict)
-    return structured
+        if debug_mode:
+            structured_dict = structured.model_dump()
+            structured_dict["debug_raw_text"] = raw_text
+            return structured.__class__(**structured_dict)
+        return structured
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Extraction failed: %s", exc)
+        raise HTTPException(status_code=500, detail="Extraction failed (OCR engine not available)")
 
 
 def _write_excel(payload: ExportPayload) -> io.BytesIO:

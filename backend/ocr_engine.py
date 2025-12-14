@@ -77,7 +77,11 @@ def _run_tesseract(img_array: np.ndarray) -> Tuple[List[OCRBox], str]:
         tcmd.tesseract_cmd = os.getenv("TESSERACT_CMD", default_cmd)
     except Exception:
         pass
-    data = pytesseract.image_to_data(img_array, output_type=Output.DICT)
+    try:
+        data = pytesseract.image_to_data(img_array, output_type=Output.DICT)
+    except Exception as exc:
+        logger.warning("pytesseract processing failed: %s", exc)
+        return [], ""
     n_boxes = len(data["text"])
     boxes: List[OCRBox] = []
     texts: List[str] = []
