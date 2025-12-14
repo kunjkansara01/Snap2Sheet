@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: snap2sheet-backend
+    env: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    envVars:
+      - key: CORS_ORIGINS
+        value: https://snap2sheet-frontend.onrender.com
+      - key: DEBUG_OCR
+        value: "false"
+  - type: web
+    name: snap2sheet-frontend
+    env: docker
+    plan: free
+    dockerfilePath: ./frontend/Dockerfile
+    envVars:
+      - key: NEXT_PUBLIC_API_BASE
+        value: https://snap2sheet-backend.onrender.com
