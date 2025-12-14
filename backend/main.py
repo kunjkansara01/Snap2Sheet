@@ -22,10 +22,13 @@ logging.basicConfig(level=logging.INFO)
 
 
 def _build_cors_origins() -> List[str]:
-    configured = os.getenv("CORS_ORIGINS") or os.getenv("ALLOWED_ORIGINS") or "*"
-    if configured == "*":
-        return ["*"]
-    return [origin.strip() for origin in configured.split(",") if origin.strip()]
+    configured = os.getenv("CORS_ORIGINS") or os.getenv("ALLOWED_ORIGINS")
+    if configured:
+        origins = [origin.strip() for origin in configured.split(",") if origin.strip()]
+    else:
+        # default safe localhost origins (avoid "*" when allow_credentials=True)
+        origins = ["http://localhost:3000", "http://127.0.0.1:3000", "http://frontend:3000"]
+    return origins
 
 
 app = FastAPI(title="Snap2Sheet API", version="1.0.0")
