@@ -1,64 +1,36 @@
 # Snap2Sheet
 
-Upload an invoice screenshot or PDF → download an accountant-ready Excel file.
+Upload an invoice image or PDF → download an accountant-ready Excel (.xlsx). Exports **Summary + LineItems** sheets.
 
-- Live frontend: _TBD (Render frontend)_
-- Live backend: _TBD (Render backend)_
+## Features
+- Supports invoice **images (png/jpg/jpeg)** and **PDF**
+- Layout-aware OCR (table extraction)
+- EU/US number normalization
+- Download `.xlsx`
 
-## What it does
-- Accepts JPG/PNG/PDF invoices (multi-page PDFs pick the best page)
-- OCR (PaddleOCR → Tesseract fallback), layout-aware table parsing
-- Outputs structured JSON and downloadable Excel with Summary + LineItems
-
-## Quick start (Docker)
+## Quick Start (Docker) — 2 minutes
 ```bash
+git clone https://github.com/kunjkansara01/Snap2Sheet.git
+cd Snap2Sheet
 docker compose up --build
-# frontend: http://localhost:3000
-# backend:  http://localhost:8000
 ```
+Then open [http://localhost:3000](http://localhost:3000), click “Try sample invoice” → download .xlsx.
 
-## Local dev (without Docker)
-Backend:
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn main:app --host 0.0.0.0 --port 8000
-```
-Frontend:
-```bash
-cd frontend
-npm install
-NEXT_PUBLIC_API_BASE=http://localhost:8000 npm run dev
-```
+## Services / Ports
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend: [http://localhost:8000](http://localhost:8000) (FastAPI docs at `/docs`)
 
-## Env vars
-Backend (`backend/.env.example`)
-- `CORS_ORIGINS` (comma separated, e.g. `http://localhost:3000,http://frontend:3000`)
-- `DEBUG_OCR` (default false)
+## Environment Variables
+- See `.env.example` in `frontend/` and `backend/`
+- `NEXT_PUBLIC_API_BASE`
+- `CORS_ORIGINS`
+- `DEBUG_OCR`
 
-Frontend (`frontend/.env.example`)
-- `NEXT_PUBLIC_API_BASE` (e.g. `http://localhost:8000`)
+## Troubleshooting (Windows)
+- If `open` command fails, use `start http://localhost:3000`
+- If Docker engine isn’t running, start Docker Desktop
+- If ports 3000/8000 are busy, stop the process or change compose port mappings
 
-## Deployment (Render, two services – recommended)
-- Backend: Deploy Docker using `backend/Dockerfile`; set `CORS_ORIGINS=<frontend_url>`
-- Frontend: Deploy Docker using `frontend/Dockerfile`; set `NEXT_PUBLIC_API_BASE=<backend_url>`
-- Render template: see `render.yaml`
-
-## CI
-GitHub Actions (`.github/workflows/ci.yml`) runs:
-- Frontend lint + build
-- Backend dependency install + import/compile check
-
-## Smoke test checklist
-- `docker compose up --build`
-- Open http://localhost:3000
-- Upload sample image/PDF → summary + line items populate
-- Download Excel works
-
-## Tech stack
-- Frontend: Next.js 14 (App Router), TypeScript, Tailwind, Framer Motion
-- Backend: FastAPI, PaddleOCR/Tesseract fallback, PyMuPDF for PDFs, openpyxl for Excel
-
-## Notes
-- No DB; all processing in-memory
-- Supports JPG/PNG/PDF up to ~10MB
+## Submission info
+- Problem statement: **Problem 3 – Data Trap**
+- Judges can test in 30 seconds: run the Quick Start above, open http://localhost:3000, click “Try sample invoice,” download .xlsx
